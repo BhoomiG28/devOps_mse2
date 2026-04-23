@@ -1,0 +1,58 @@
+name: Docker Push (Optional)
+
+# Triggers only on new tags (releases)
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  push-docker:
+    runs-on: ubuntu-latest
+    name: Push to Docker Hub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract version
+        id: meta
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/f1-dashboard:${{ steps.meta.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/f1-dashboard:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_USERNAME }}/f1-dashboard
+          short-description: Formula 1 Dashboard - Real-time race data visualization
+          description: |
+            F1 Dashboard is a React + Vite application for visualizing Formula 1 race data.
+            
+            Features:
+            - Real-time race simulations
+            - Driver standings and statistics
+            - Lap time analysis
+            - Sector performance tracking
+            
+            Get started with: `docker run -p 3000:80 ${{ secrets.DOCKER_USERNAME }}/f1-dashboard:latest`

@@ -5,8 +5,10 @@ npm-debug.log
 .env
 .env.local
 .DS_Store
-dist
 .vscode
 .idea
-*.zip
-archive.zip
+dist
+build
+.npm
+.eslintcache
+
